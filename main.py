@@ -39,7 +39,7 @@ def round_robin_scheduling(time_quantum, arrival_times, burst_times):
     idx = 0 # set index to iterate through processes
     progress = [0 for _ in range(num_processes)] # create a list to store progress, set all vals to 0
     startT = [0 for _ in range(num_processes)] # create a list to store start times, set all vals to 0
-    readyQueue = [0 for _ in range(num_processes)]  # create a list to store start times, set all vals to 0
+    readyQueue = []  # create a list to store start times, set all vals to 0
 
     while any(process[2] > 0 for process in processes): # While any process has remaining time
         if processes[idx][2] > 0 and processes[idx][1] <= current_time: # If the next processes has been reached
@@ -51,7 +51,9 @@ def round_robin_scheduling(time_quantum, arrival_times, burst_times):
                 readyQueue.append(idx)
             if processes[readyQueue[0]][2] == 0: # if the next process to run in the ready queue is 0, remove it
                 readyQueue.pop(0)
-            idx = (idx + 1) % num_processes
+            if processes[(idx + 1) % num_processes][1] <= current_time:
+                idx = (idx + 1) % num_processes
+
             current_time += context_switch
         elif len(readyQueue) != 0 and processes[readyQueue[0]][2] > 0: # If the next process is not ready to run check ready queue
             execution_time = min(time_quantum, processes[readyQueue[0]][2])
@@ -60,12 +62,16 @@ def round_robin_scheduling(time_quantum, arrival_times, burst_times):
             execute_process(processes, readyQueue[0], execution_time, current_time, progress[readyQueue[0]], processes[readyQueue[0]][0], processes[readyQueue[0]][1], processes[readyQueue[0]][3], startT, time_quantum)
             if processes[readyQueue[0]][2] == 0: # if the next process to run has no remaining time, remove it
                 readyQueue.pop(0)
-            idx = (idx + 1) % num_processes
             current_time += context_switch
+
+            if processes[(idx + 1) % num_processes][1] <= current_time:
+                idx = (idx + 1) % num_processes
         else: # if the next process is not ready and the ready queue is empty, wait 1 second
             current_time += 1  # If no processes in ready queue, time still advances
-        idx = (idx + 1) % num_processes  # Rotate index to the next process
-        current_time += context_switch
+        if processes[(idx + 1) % num_processes][1] <= current_time:
+            idx = (idx + 1) % num_processes
+
+            current_time += context_switch
 
 
 # function to execute process
